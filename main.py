@@ -9,20 +9,27 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import TimeoutException
+
 configuration = None
 
-# dictionary to store fields
-author_analysis = {
-    'date_review_posted': [],
-    'review_title': [],
-    'review': [],
-    'verified_purchase': [],
-    'people_find_helpful': [],
-    'ratings': [],
-    'start': [],
-    'end': []
+author_analysis = {}
 
-}
+# dictionary to store fields
+def initialize_dict():
+    global author_analysis
+    author_analysis = {
+        'date_review_posted': [],
+        'review_title': [],
+        'review': [],
+        'verified_purchase': [],
+        'people_find_helpful': [],
+        'ratings': [],
+        'start': [],
+        'end': []
+
+    }
 
 
 def add_to_dict(date, title, ratings, review, verified_purchase, helpful, start, end):
@@ -72,6 +79,9 @@ def extract_author_profile(urls):
     driver = setup.DriverSetup().driver
     # load the url from csv
     for url in urls:
+        #initialize the dictionary
+        initialize_dict()
+        
         # url = 'https://www.amazon.ca/gp/profile/amzn1.account.AE3X4B27XTAPBJLVXZX4YVM6KPBQ/ref=cm_cr_dp_d_gw_tr?ie=UTF8'
         driver.get(url)
 
@@ -99,7 +109,8 @@ def extract_author_profile(urls):
                 if new_height == last_height:  # check if height of pages are similar stop
                     break
                 last_height = new_height  # change the old page height to new height
-        except:
+        except Exception as exc:
+            print(exc)
             print('not able to load')
             driver.quit()
 
@@ -111,43 +122,58 @@ def extract_author_profile(urls):
         author_name = configuration.get_author_name(driver)
 
         path = '//div[@id="profile-at-card-container"]//div[@class="a-row"]'  # review cards for each review
-        reviews = driver.find_elements_by_xpath(path)
+        try:
+            reviews = driver.find_elements_by_xpath(path)
+        except NoSuchElementException:
+            print('No such element found, re-look the path')
+            driver.quit()
+            return
         for review in reviews:
             time.sleep(random.randint(3, 7))
             path = 'div.a-section.profile-at-content > p > a'
             try:
                 more_review = review.find_element_by_css_selector(path)
-                if more_review:
-                    start = datetime.datetime.now()
-                    current_window = driver.current_window_handle
-                    more_review.send_keys(Keys.CONTROL + Keys.ENTER)  # open link in new tab keyboard shortcut
-                    WebDriverWait(driver, 10).until(ec.number_of_windows_to_be(2))
-                    driver.switch_to.window(driver.window_handles[1])  # new tab is at index 1
-
-                    # extract info
-                    date = configuration.get_posted_date(driver)
-                    title = configuration.get_title(driver)
-                    ratings = configuration.get_ratings(driver)
-                    review = configuration.get_reviews(driver)
-                    verified_purchase = configuration.is_verified_purchase(driver)
-                    helpful = configuration.get_helpful_count(driver)
-                    end = datetime.datetime.now()
-                    # store to dictionary
-                    add_to_dict(date, title, ratings, review, verified_purchase, helpful, start, end)
-                    time.sleep(3)
-                    driver.close()  # closes new tab
-                    WebDriverWait(driver, 10).until(ec.number_of_windows_to_be(1))
-                    driver.switch_to.window(current_window)
-            except:
-                print('exception occurred')
+            except NoSuchElementException:
+                print('Unable to locate the element (path can be wrong)')
                 driver.quit()
                 return
+            if more_review:
+                start = datetime.datetime.now()
+                current_window = driver.current_window_handle
+                more_review.send_keys(Keys.CONTROL + Keys.ENTER)  # open link in new tab keyboard shortcut
+                WebDriverWait(driver, 10).until(ec.number_of_windows_to_be(2))
+                driver.switch_to.window(driver.window_handles[1])  # new tab is at index 1
 
-        df = pd.DataFrame.from_dict(author_analysis)
-        df['author'] = author_name
-        df.to_csv(f'{author_name}.csv')
-        print(f'Contents are saved in: {author_name}.csv')
+                # extract info
+                date = configuration.get_posted_date(driver)
+                title = configuration.get_title(driver)
+                ratings = configuration.get_ratings(driver)
+                review = configuration.get_reviews(driver)
+                verified_purchase = configuration.is_verified_purchase(driver)
+                helpful = configuration.get_helpful_count(driver)
+                end = datetime.datetime.now()
+                # store to dictionary
+                add_to_dict(date, title, ratings, review, verified_purchase, helpful, start, end)
+                time.sleep(3)
+                driver.close()  # closes new tab
+                try:
+                    WebDriverWait(driver, 10).until(ec.number_of_windows_to_be(1))
+                except TimeoutException:
+                    print('time out occurred')
+                    return
+                driver.switch_to.window(current_window)
 
+        if len(author_analysis['review']) > 0:
+            df = pd.DataFrame.from_dict(author_analysis)
+            df['author'] = author_name
+            try:
+                df.to_csv(f'{author_name}.csv')
+            except Exception as exp:
+                print("Permission denied, if the file already exist then delete first")
+                print(exp)
+                driver.quit()
+                return
+            print(f'Contents are saved in: {author_name}.csv')
     driver.quit()
 
 

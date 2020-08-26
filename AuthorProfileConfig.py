@@ -1,3 +1,5 @@
+from selenium.common.exceptions import NoSuchElementException
+
 class AuthorConfiguration:
 
     """
@@ -34,7 +36,7 @@ class AuthorConfiguration:
         try:
             name = driver.find_element_by_css_selector(path).text
             return name
-        except:
+        except NoSuchElementException:
             return ""
 
     def get_posted_date(self, driver):
@@ -58,7 +60,7 @@ class AuthorConfiguration:
             date = date.split()[-3:]
             date = ' '.join(map(str, date))
             return date
-        except:
+        except NoSuchElementException:
             return ""
 
     def get_title(self, driver):
@@ -81,7 +83,7 @@ class AuthorConfiguration:
             # title = driver.find_element_by_css_selector(path).text
             title = driver.find_element_by_xpath(path).text
             return title
-        except:
+        except NoSuchElementException:
             return ""
 
     def get_ratings(self, driver):
@@ -102,7 +104,7 @@ class AuthorConfiguration:
             rating = driver.find_element_by_css_selector(path).get_attribute('title')
             rating = rating.split()[0]
             return rating
-        except:
+        except NoSuchElementException:
             return ""
 
     def get_reviews(self, driver):
@@ -122,7 +124,7 @@ class AuthorConfiguration:
         try:
             review = driver.find_element_by_xpath(path).text
             return review
-        except:
+        except NoSuchElementException:
             return ""
 
     def get_helpful_count(self, driver):
@@ -143,7 +145,7 @@ class AuthorConfiguration:
             text = driver.find_element_by_css_selector(path).get_attribute('textContent')
             count = text.split()[0]
             return count
-        except:
+        except NoSuchElementException:
             return 0
 
     def is_verified_purchase(self, driver):
@@ -162,5 +164,5 @@ class AuthorConfiguration:
         try:
             check = driver.find_element_by_xpath(path).text
             return "yes"
-        except:
+        except NoSuchElementException:
             return "no"
