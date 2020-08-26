@@ -12,6 +12,8 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 
+from platform import system # to check os
+
 configuration = None
 
 author_analysis = {}
@@ -140,7 +142,12 @@ def extract_author_profile(urls):
             if more_review:
                 start = datetime.datetime.now()
                 current_window = driver.current_window_handle
-                more_review.send_keys(Keys.CONTROL + Keys.ENTER)  # open link in new tab keyboard shortcut
+                os = system()
+                if os == 'Windows' or os == 'Linux':
+                    print('windows')
+                    more_review.send_keys(Keys.CONTROL + Keys.ENTER)  # open link in new tab keyboard shortcut
+                else:
+                    more_review.send_keys(Keys.COMMAND + Keys.ENTER)
                 WebDriverWait(driver, 10).until(ec.number_of_windows_to_be(2))
                 driver.switch_to.window(driver.window_handles[1])  # new tab is at index 1
 
