@@ -1,7 +1,7 @@
 from selenium.common.exceptions import NoSuchElementException
 
-class AuthorConfiguration:
 
+class AuthorConfiguration:
     """
     get_author_name():
         Get the name of author
@@ -35,6 +35,7 @@ class AuthorConfiguration:
         path = '#customer-profile-name-header > div.a-row.a-spacing-none.name-container > span'
         try:
             name = driver.find_element_by_css_selector(path).text
+
             return name
         except NoSuchElementException:
             return ""
@@ -59,8 +60,10 @@ class AuthorConfiguration:
             date = driver.find_element_by_xpath(path).text
             date = date.split()[-3:]
             date = ' '.join(map(str, date))
+
             return date
         except NoSuchElementException:
+            print("No date found...")
             return ""
 
     def get_title(self, driver):
@@ -82,8 +85,10 @@ class AuthorConfiguration:
         try:
             # title = driver.find_element_by_css_selector(path).text
             title = driver.find_element_by_xpath(path).text
+
             return title
         except NoSuchElementException:
+            print("No title found...")
             return ""
 
     def get_ratings(self, driver):
@@ -103,6 +108,7 @@ class AuthorConfiguration:
         try:
             rating = driver.find_element_by_css_selector(path).get_attribute('title')
             rating = rating.split()[0]
+
             return rating
         except NoSuchElementException:
             return ""
@@ -163,6 +169,16 @@ class AuthorConfiguration:
         path = '//span[@data-hook="avp-badge"]'
         try:
             check = driver.find_element_by_xpath(path).text
+
             return "yes"
         except NoSuchElementException:
             return "no"
+
+    def get_product_url(self, driver):
+        path = '//a[@data-hook="product-link"]'
+        try:
+            url = driver.find_element_by_xpath(path).get_attribute('href')
+            print(url)
+            print(type(url))
+        except NoSuchElementException:
+            return ""

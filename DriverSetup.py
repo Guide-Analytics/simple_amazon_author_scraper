@@ -20,6 +20,7 @@ class DriverSetup:
         Constructor for webdriver initialisation
         """
         opt = Options()
-        # opt.headless = True  # set headless mode to True
+        opt.headless = True  # set headless mode to True
         opt.add_argument('--incognito')
+        opt.add_argument('--disable-gpu')
         self.driver = webdriver.Chrome(ChromeDriverManager().install(), options=opt)
