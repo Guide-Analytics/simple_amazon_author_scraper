@@ -1,4 +1,4 @@
-# author_amazon_scrape
+# Simple Amazon Author Scraper
 Install the following packages: <br>
 - selenium: To automate scraping. You can download using pip through command line as:
 <br><pre><em>pip install selenium</em></pre><br>
